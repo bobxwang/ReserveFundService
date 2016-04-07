@@ -2,23 +2,88 @@ package com.bob.reservefund.scala.Controller
 
 import javax.inject.Inject
 
+import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
-import com.twitter.finagle.http.{Method, Response, Request}
-import com.twitter.finatra.http.Controller
 import com.twitter.finatra.http.response.ResponseBuilder
 import com.twitter.util.Future
 
-case class hellojson(name: String, age: Int)
+case class Hello(name: String, age: Int, sex: Int)
 
-class HelloController extends Controller {
+class HelloController extends FinatraController {
 
-  get("/hello") { request: Request =>
-    info("hello")
-    "hello"
+  def toInt(s: String): Option[Int] = {
+    try {
+      Some(s.toInt)
+    } catch {
+      case e: Exception => None
+    }
   }
 
-  get("/hellojson") { request: Request =>
-    List(hellojson("bb", 1), hellojson("aa", 2), hellojson("cc", 3))
+  get("/hellos", swagger(o => {
+    o.summary("get all hellos")
+      .description("return all hellos item")
+      .tag("hello")
+      .produces("application/json")
+      .responseWith[List[Hello]](200, "the response json", example = Some(List(Hello("bb", 1, 2))))
+      .responseWith[Unit](404, "the address is not found")
+  })) { request: Request =>
+    info("hello")
+    List(Hello("bb", 1, 1), Hello("aa", 2, 2), Hello("cc", 3, 1))
+  }
+
+  get("/hellos/:id", swagger(o => {
+    o.summary("get the id hello")
+      .description("return the appoint hello")
+      .tag("hello")
+      .queryParam[Int]("sex", "the hello sex")
+      .routeParam[String]("id", "the hello id")
+      .produces("application/json")
+      .responseWith[Hello](200, "the response json", example = Some(Hello("bb", 1, 2)))
+      .responseWith[Unit](404, "the address is not found")
+  })) { request: Request =>
+    val id = request.getParam("id")
+    val sex = request.getIntParam("sex", 1)
+    Hello(s"name${id}", toInt(id).getOrElse(0), sex)
+  }
+
+  put("/hellos/:id", swagger(o => {
+    o.summary("modify the id hello")
+      .description("modify the hello and return the hello")
+      .tag("hello")
+      .formParam[String]("name", "the hello name")
+      .formParam[Int]("sex", "the hello sex")
+      .routeParam[String]("id", "the hello id")
+      .produces("application/json")
+      .responseWith[Hello](200, "the response json", example = Some(Hello("bb", 1, 2)))
+      .responseWith[Unit](404, "the address is not found")
+  })) { request: Request =>
+    val id = request.getParam("id")
+    val sex = request.getIntParam("sex", 1)
+    val name = request.getParam("name")
+    Hello(s"${name}-${id}", toInt(id).getOrElse(0), sex)
+  }
+
+  post("/hellos/paramisclass",
+    swagger { o =>
+      o.summary("Create a new hello")
+        .tag("hello")
+        .bodyParam[Hello]("hello", "the hello details")
+        .responseWith[Unit](200, "the hello is created")
+        .responseWith[Unit](500, "internal error")
+    }) { hello: Hello =>
+    response.ok.json(hello).toFuture
+  }
+
+  post("/hellos/paramisreq",
+    swagger { o =>
+      o.summary("Create a new hello")
+        .tag("hello")
+        .bodyParam[Hello]("hello", "the hello details")
+        .responseWith[Unit](200, "the hello is created")
+        .responseWith[Unit](500, "internal error")
+    }) { request: Request =>
+    val hello = request.contentString
+    response.ok.json(hello).toFuture
   }
 }
 
@@ -26,8 +91,8 @@ class HelloFilter @Inject()(responseBuilder: ResponseBuilder) extends SimpleFilt
 
   override def apply(request: Request, service: Service[Request, Response]): Future[Response] = {
     val userid = request.params.getOrElse("userid", "")
-    if (userid.isEmpty) {
-      responseBuilder.badRequest(hellojson("请求非法", 1)).toFuture
+    if (userid.nonEmpty) {
+      responseBuilder.badRequest(Hello("请求非法", 1, 1)).toFuture
     } else {
       service(request)
     }

@@ -6,17 +6,19 @@ version := "1.0"
 
 scalaVersion := "2.11.6"
 
-libraryDependencies ++= Seq(
-  "com.twitter" %% "finagle-http" % "6.34.0",
-  "com.twitter" %% "finagle-mysql" % "6.34.0"
-).map(_.exclude("com.google.code.findbugs", "jsr305"))
+//libraryDependencies ++= Seq(
+//  "com.twitter" %% "finagle-http" % "6.34.0",
+//  "com.twitter" %% "finagle-mysql" % "6.34.0"
+//).map(_.exclude("com.google.code.findbugs", "jsr305"))
 
 libraryDependencies ++= Seq(
-  "com.twitter.finatra" % "finatra-http_2.11" % "2.1.5",
-  "com.twitter.finatra" % "finatra-slf4j_2.11" % "2.1.5"
+  "com.twitter.finatra" % "finatra-http_2.11" % "2.1.1",
+  "com.twitter.finatra" % "finatra-slf4j_2.11" % "2.1.1"
 ).map(_.exclude("com.google.code.findbugs", "jsr305"))
 
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.7"
+
+libraryDependencies += "com.github.xiaodongw" %% "swagger-finatra2" % "0.5.0"
 
 baseAssemblySettings
 

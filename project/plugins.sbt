@@ -2,6 +2,8 @@ logLevel := Level.Warn
 
 resolvers += Resolver.url("https://github.com/sbt/sbt-assembly.git")
 resolvers += Resolver.url("https://github.com/jrudolph/sbt-dependency-graph.git")
+// 解决下载路径问题(swagger-finatra)
+resolvers += Resolver.url("https://oss.sonatype.org/content/repositories/releases/")
 
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.1")
 
