@@ -12,13 +12,13 @@ scalaVersion := "2.11.6"
 //).map(_.exclude("com.google.code.findbugs", "jsr305"))
 
 libraryDependencies ++= Seq(
-  "com.twitter.finatra" % "finatra-http_2.11" % "2.1.1",
-  "com.twitter.finatra" % "finatra-slf4j_2.11" % "2.1.1"
+  "com.twitter.finatra" % "finatra-http_2.11" % "2.1.5",
+  "com.twitter.finatra" % "finatra-slf4j_2.11" % "2.1.5"
 ).map(_.exclude("com.google.code.findbugs", "jsr305"))
 
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.7"
 
-libraryDependencies += "com.github.xiaodongw" %% "swagger-finatra2" % "0.5.0"
+libraryDependencies += "com.github.xiaodongw" %% "swagger-finatra2" % "0.5.1"
 
 baseAssemblySettings
 
