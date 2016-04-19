@@ -14,19 +14,29 @@ scalaVersion := "2.11.6"
 libraryDependencies ++= Seq(
   "com.twitter.finatra" % "finatra-http_2.11" % "2.1.5",
   "com.twitter.finatra" % "finatra-slf4j_2.11" % "2.1.5"
-).map(_.exclude("com.google.code.findbugs", "jsr305"))
+).map(_.exclude("com.google.code.findbugs", "jsr305")
+  .exclude("com.google.code.findbugs", "annotations"))
 
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.7"
 
 libraryDependencies += "com.github.xiaodongw" %% "swagger-finatra2" % "0.5.1"
 
+libraryDependencies += ("com.netflix.eureka" % "eureka-client" % "1.1.147")
+  .exclude("javax.ws.rs", "jsr311-api")
+  .exclude("commons-logging", "commons-logging")
+  .exclude("xmlpull", "xmlpull")
+
 baseAssemblySettings
 
 mainClass in(Compile, run) := Some("com.bob.reservefund.scala.FundApp")
 
+logLevel in assembly := Level.Debug
+
 /* 包合并策略 */
 assemblyMergeStrategy in assembly := {
-  case PathList("javax", "servlet", xs@_*) => MergeStrategy.first
+  /* 将org,xmlpull这个下的所有类和文件都做合并 */
+  case PathList("org", "xmlpull", xs@_ *) => MergeStrategy.first
+  case PathList("javax", "servlet", xs@_ *) => MergeStrategy.first
   case PathList(ps@_*) if ps.last endsWith ".html" => MergeStrategy.first
   case "application.conf" => MergeStrategy.concat
   case "unwanted.txt" => MergeStrategy.discard

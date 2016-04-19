@@ -6,16 +6,22 @@ import com.fasterxml.jackson.core.JsonGenerator.Feature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy
 import com.github.xiaodongw.swagger.finatra.SwaggerController
-import com.twitter.finagle.http.Request
+import com.netflix.appinfo.InstanceInfo.InstanceStatus
+import com.netflix.appinfo.{ApplicationInfoManager, MyDataCenterInstanceConfig}
+import com.netflix.discovery.shared.Applications
+import com.netflix.discovery.{DefaultEurekaClientConfig, DiscoveryManager}
+import com.twitter.finagle.http.{Response, Request}
 import com.twitter.finagle.http.filter.JsonpFilter
 import com.twitter.finatra.http.HttpServer
-import com.twitter.finatra.http.filters.CommonFilters
+import com.twitter.finatra.http.filters.{LoggingMDCFilter, TraceIdMDCFilter, CommonFilters}
 import com.twitter.finatra.http.routing.HttpRouter
 import com.twitter.finatra.json.modules.FinatraJacksonModule
 import com.twitter.finatra.json.utils.CamelCasePropertyNamingStrategy
 import io.swagger.models.auth.BasicAuthDefinition
 import io.swagger.models.{Contact, Info, Swagger}
 import io.swagger.util.Json
+
+import scala.collection.JavaConversions._
 
 object CustomerSwagger extends Swagger {
   Json.mapper().setPropertyNamingStrategy(new LowerCaseWithUnderscoresStrategy)
@@ -47,6 +53,43 @@ object FundApp extends HttpServer {
 
   val swaggerController = new SwaggerController(swagger = CustomerSwagger)
 
+  initEurekaClient
+
+  stopEurekaClient
+
+  /**
+   * if we using kill -9 pid,the below code will not invoke,we should using kill pid instead
+   */
+  def stopEurekaClient: Unit = {
+    Runtime.getRuntime.addShutdownHook(new Thread(new Runnable {
+      override def run(): Unit = {
+        println("app want to close")
+        DiscoveryManager.getInstance().shutdownComponent()
+        println("app has been closed")
+      }
+    }))
+  }
+
+  def initEurekaClient: Unit = {
+
+    val dataCenterInstanceConfig = new MyDataCenterInstanceConfig();
+    val defaultEurekaClientConfig = new DefaultEurekaClientConfig();
+    DiscoveryManager.getInstance().initComponent(
+      dataCenterInstanceConfig, defaultEurekaClientConfig);
+    ApplicationInfoManager.getInstance.setInstanceStatus(InstanceStatus.UP)
+    val applications: Applications = DiscoveryManager.getInstance.getDiscoveryClient.getApplications
+    applications.getRegisteredApplications().foreach(x => {
+      println(x.getName)
+    })
+
+    val otherService = "RISK-OPENAPI";
+    val nextServerInfo = DiscoveryManager.getInstance().getDiscoveryClient.getNextServerFromEureka(otherService, false);
+    println("Found an instance of example service to talk to from eureka: "
+      + nextServerInfo.getVIPAddress() + ":" + nextServerInfo.getPort());
+    println("healthCheckUrl: " + nextServerInfo.getHealthCheckUrls());
+    println("override: " + nextServerInfo.getOverriddenStatus());
+  }
+
   /**
    * 也可以在运行进通过 -http.port 进行指定
    */
@@ -56,9 +99,11 @@ object FundApp extends HttpServer {
 
   override protected def configureHttp(router: HttpRouter): Unit = {
 
+    println("invoke configure http")
+
     router
-      //      .filter[LoggingMDCFilter[Request, Response]]
-      //      .filter[TraceIdMDCFilter[Request, Response]]
+      .filter[LoggingMDCFilter[Request, Response]]
+      .filter[TraceIdMDCFilter[Request, Response]]
       .filter[JsonpFilter[Request]]
       .filter[CommonFilters] // global filter
       .add(swaggerController)
