@@ -12,8 +12,8 @@ scalaVersion := "2.11.6"
 //).map(_.exclude("com.google.code.findbugs", "jsr305"))
 
 libraryDependencies ++= Seq(
-  "com.twitter.finatra" % "finatra-http_2.11" % "2.1.5",
-  "com.twitter.finatra" % "finatra-slf4j_2.11" % "2.1.5"
+  "com.twitter.finatra" % "finatra-http_2.11" % "2.1.6",
+  "com.twitter.finatra" % "finatra-slf4j_2.11" % "2.1.6"
 ).map(_.exclude("com.google.code.findbugs", "jsr305")
   .exclude("com.google.code.findbugs", "annotations"))
 
@@ -25,6 +25,12 @@ libraryDependencies += ("com.netflix.eureka" % "eureka-client" % "1.1.147")
   .exclude("javax.ws.rs", "jsr311-api")
   .exclude("commons-logging", "commons-logging")
   .exclude("xmlpull", "xmlpull")
+
+libraryDependencies ++= Seq(
+  "com.twitter" % "scrooge-core_2.11" % "4.7.0",
+  "com.twitter.finatra" % "finatra-thrift_2.11" % "2.1.6",
+  "org.apache.thrift" % "libthrift" % "0.8.0"
+)
 
 baseAssemblySettings
 
@@ -52,3 +58,6 @@ assemblyShadeRules in assembly := Seq(
   /* 相同包不同版本时可以修改包名 */
   ShadeRule.rename("com.google.**" -> "scom.google.@1").inAll
 )
+
+/* where to find the thrift files, default is src/main/thrift */
+scroogeThriftSourceFolder <<= baseDirectory

@@ -9,3 +9,7 @@ addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.1")
 
 // 可以像mvn一样显示依赖关系图
 addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.8.2")
+
+resolvers += "twitter-repo" at "https://maven.twttr.com"
+
+addSbtPlugin("com.twitter" % "scrooge-sbt-plugin" % "4.5.0")

@@ -108,5 +108,10 @@ object FundApp extends HttpServer {
       .filter[CommonFilters] // global filter
       .add(swaggerController)
       .add[HelloFilter, HelloController] // per-controller filter
+      .exceptionMapper[MExceptionMapper]
   }
+
+  override val modules = Seq(
+    Modules
+  )
 }

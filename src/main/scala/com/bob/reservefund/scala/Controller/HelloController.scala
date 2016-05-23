@@ -4,10 +4,12 @@ import javax.inject.Inject
 
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
+import com.twitter.finatra.http.request.RequestUtils
 import com.twitter.finatra.http.response.ResponseBuilder
+import com.twitter.finatra.validation.NotEmpty
 import com.twitter.util.Future
 
-case class Hello(name: String, age: Int, sex: Int)
+case class Hello(@NotEmpty name: String, age: Int, sex: Int)
 
 class HelloController extends FinatraController {
 
@@ -28,7 +30,7 @@ class HelloController extends FinatraController {
       .responseWith[Unit](404, "the address is not found")
   })) { request: Request =>
     info("hello")
-    List(Hello("bb", 1, 1), Hello("aa", 2, 2), Hello("cc", 3, 1))
+    List(Hello(RequestUtils.pathUrl(request), 1, 1), Hello("aa", 2, 2), Hello("cc", 3, 1))
   }
 
   get("/hellos/:id", swagger(o => {
@@ -41,9 +43,10 @@ class HelloController extends FinatraController {
       .responseWith[Hello](200, "the response json", example = Some(Hello("bb", 1, 2)))
       .responseWith[Unit](404, "the address is not found")
   })) { request: Request =>
+    val iid = request.params("id")
     val id = request.getParam("id")
     val sex = request.getIntParam("sex", 1)
-    Hello(s"name${id}", toInt(id).getOrElse(0), sex)
+    Hello(s"name id ${id},pm id is ${iid}", toInt(id).getOrElse(0), sex)
   }
 
   put("/hellos/:id", swagger(o => {
