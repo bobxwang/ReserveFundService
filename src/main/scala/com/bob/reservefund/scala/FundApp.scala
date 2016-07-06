@@ -1,6 +1,7 @@
 package com.bob.reservefund.scala
 
-import com.bob.reservefund.scala.Controller.{HelloController, HelloFilter}
+import com.bob.reservefund.scala.Controller.{UserController, HelloController, HelloFilter}
+import com.bob.reservefund.scala.Filter.WhichUserLoginFilter
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import com.fasterxml.jackson.core.JsonGenerator.Feature
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -10,10 +11,10 @@ import com.netflix.appinfo.InstanceInfo.InstanceStatus
 import com.netflix.appinfo.{ApplicationInfoManager, MyDataCenterInstanceConfig}
 import com.netflix.discovery.shared.Applications
 import com.netflix.discovery.{DefaultEurekaClientConfig, DiscoveryManager}
-import com.twitter.finagle.http.{Response, Request}
 import com.twitter.finagle.http.filter.JsonpFilter
+import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finatra.http.HttpServer
-import com.twitter.finatra.http.filters.{LoggingMDCFilter, TraceIdMDCFilter, CommonFilters}
+import com.twitter.finatra.http.filters.{CommonFilters, LoggingMDCFilter, TraceIdMDCFilter}
 import com.twitter.finatra.http.routing.HttpRouter
 import com.twitter.finatra.json.modules.FinatraJacksonModule
 import com.twitter.finatra.json.utils.CamelCasePropertyNamingStrategy
@@ -29,7 +30,7 @@ object CustomerSwagger extends Swagger {
 
 object CustomJacksonModule extends FinatraJacksonModule {
 
-  override val serializationInclusion = Include.NON_EMPTY
+  override val serializationInclusion = Include.ALWAYS
 
   override val propertyNamingStrategy = CamelCasePropertyNamingStrategy
 
@@ -82,12 +83,18 @@ object FundApp extends HttpServer {
       println(x.getName)
     })
 
-    val otherService = "RISK-OPENAPI";
-    val nextServerInfo = DiscoveryManager.getInstance().getDiscoveryClient.getNextServerFromEureka(otherService, false);
-    println("Found an instance of example service to talk to from eureka: "
-      + nextServerInfo.getVIPAddress() + ":" + nextServerInfo.getPort());
-    println("healthCheckUrl: " + nextServerInfo.getHealthCheckUrls());
-    println("override: " + nextServerInfo.getOverriddenStatus());
+    val otherService = "RISK-OPENAPI"
+    applications.getRegisteredApplications(otherService).getInstances().foreach(x => {
+      println(s"${x.getAppName}, ${x.getPort}, ${x.getHostName}, ${x.getStatus}")
+    })
+    applications.getRegisteredApplications(otherService).getInstances.foreach(x => {
+      println(s"${x.getAppName}, ${x.getPort}, ${x.getHostName}, ${x.getStatus}")
+    })
+    (1 to 10).foreach(x => {
+      println(s"the ${x} times to invoke\n")
+      val nextServerInfo = DiscoveryManager.getInstance().getDiscoveryClient.getNextServerFromEureka(otherService, false)
+      println(s"Found an instance of example service to talk to from eureka: ${nextServerInfo.getIPAddr}, ${nextServerInfo.getVIPAddress()} : ${nextServerInfo.getPort()}")
+    })
   }
 
   /**
@@ -108,6 +115,7 @@ object FundApp extends HttpServer {
       .filter[CommonFilters] // global filter
       .add(swaggerController)
       .add[HelloFilter, HelloController] // per-controller filter
+      .add[WhichUserLoginFilter, UserController]
       .exceptionMapper[MExceptionMapper]
   }
 

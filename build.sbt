@@ -32,9 +32,20 @@ libraryDependencies ++= Seq(
   "org.apache.thrift" % "libthrift" % "0.8.0"
 )
 
+libraryDependencies ~= {
+  _ map {
+    case m if m.organization == "com.typesafe.play" =>
+      m.exclude("commons-logging", "commons-logging").
+        exclude("com.typesafe.play", "sbt-link")
+    case m => m.excludeAll(ExclusionRule(organization = "commons-logging"))
+  }
+}
+
 baseAssemblySettings
 
 mainClass in(Compile, run) := Some("com.bob.reservefund.scala.FundApp")
+
+assemblyJarName in assembly := "reservefund.jar"
 
 logLevel in assembly := Level.Debug
 

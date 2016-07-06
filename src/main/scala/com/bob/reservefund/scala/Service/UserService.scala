@@ -1,5 +1,8 @@
 package com.bob.reservefund.scala.Service
 
-class UserService {
+import com.google.inject.Singleton
+
+@Singleton
+class UserService (val dbusername: String) {
 
 }

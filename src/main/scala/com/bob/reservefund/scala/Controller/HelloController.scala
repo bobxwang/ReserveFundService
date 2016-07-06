@@ -2,16 +2,19 @@ package com.bob.reservefund.scala.Controller
 
 import javax.inject.Inject
 
+import com.google.inject.Singleton
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
 import com.twitter.finatra.http.request.RequestUtils
 import com.twitter.finatra.http.response.ResponseBuilder
+import com.twitter.finatra.json.FinatraObjectMapper
 import com.twitter.finatra.validation.NotEmpty
 import com.twitter.util.Future
 
 case class Hello(@NotEmpty name: String, age: Int, sex: Int)
 
-class HelloController extends FinatraController {
+@Singleton
+class HelloController @Inject()(finatraObjectMapper: FinatraObjectMapper) extends FinatraController {
 
   def toInt(s: String): Option[Int] = {
     try {
@@ -86,6 +89,8 @@ class HelloController extends FinatraController {
         .responseWith[Unit](500, "internal error")
     }) { request: Request =>
     val hello = request.contentString
+    val helloObj = finatraObjectMapper.parse[Hello](hello)
+    println(helloObj)
     response.ok.json(hello).toFuture
   }
 }
