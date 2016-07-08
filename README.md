@@ -4,8 +4,8 @@
 
 # Preposition
 
-basic knowledge of [sbt](http://www.scala-sbt.org/), a tool like maven in java world
-basic knowledge of [finatra](https://github.com/twitter/finatra/)
-basic knowledge of [eureka](https://github.com/Netflix/eureka), like zookeeper
+* basic knowledge of [sbt](http://www.scala-sbt.org/), a tool like maven in java world
+* basic knowledge of [finatra](https://github.com/twitter/finatra/)
+* basic knowledge of [eureka](https://github.com/Netflix/eureka), like zookeeper
 
 # Structure
