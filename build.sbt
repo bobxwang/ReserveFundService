@@ -26,6 +26,8 @@ libraryDependencies += ("com.netflix.eureka" % "eureka-client" % "1.1.147")
   .exclude("commons-logging", "commons-logging")
   .exclude("xmlpull", "xmlpull")
 
+libraryDependencies += "com.typesafe" % "config" % "1.3.0"
+
 libraryDependencies ++= Seq(
   "com.twitter" % "scrooge-core_2.11" % "4.7.0",
   "com.twitter.finatra" % "finatra-thrift_2.11" % "2.1.6",

@@ -1,14 +1,14 @@
 package com.bob.reservefund.scala
 
-import com.bob.reservefund.scala.Controller.{UserController, HelloController, HelloFilter}
-import com.bob.reservefund.scala.Filter.WhichUserLoginFilter
+import com.bob.reservefund.scala.Controller.{HelloController, HelloFilter, UserController}
+import com.bob.reservefund.scala.Filter.{RequestAopFilter, WhichUserLoginFilter}
 import com.fasterxml.jackson.annotation.JsonInclude.Include
 import com.fasterxml.jackson.core.JsonGenerator.Feature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.PropertyNamingStrategy.LowerCaseWithUnderscoresStrategy
 import com.github.xiaodongw.swagger.finatra.SwaggerController
+import com.netflix.appinfo.ApplicationInfoManager
 import com.netflix.appinfo.InstanceInfo.InstanceStatus
-import com.netflix.appinfo.{ApplicationInfoManager, MyDataCenterInstanceConfig}
 import com.netflix.discovery.shared.Applications
 import com.netflix.discovery.{DefaultEurekaClientConfig, DiscoveryManager}
 import com.twitter.finagle.http.filter.JsonpFilter
@@ -56,7 +56,7 @@ object FundApp extends HttpServer {
 
   initEurekaClient
 
-  stopEurekaClient
+  onExit(stopEurekaClient)
 
   /**
    * if we using kill -9 pid,the below code will not invoke,we should using kill pid instead
@@ -73,10 +73,10 @@ object FundApp extends HttpServer {
 
   def initEurekaClient: Unit = {
 
-    val dataCenterInstanceConfig = new MyDataCenterInstanceConfig();
-    val defaultEurekaClientConfig = new DefaultEurekaClientConfig();
+    val dataCenterInstanceConfig = new EurekaDataCenterInstanceConfig()
+    val defaultEurekaClientConfig = new DefaultEurekaClientConfig()
     DiscoveryManager.getInstance().initComponent(
-      dataCenterInstanceConfig, defaultEurekaClientConfig);
+      dataCenterInstanceConfig, defaultEurekaClientConfig)
     ApplicationInfoManager.getInstance.setInstanceStatus(InstanceStatus.UP)
     val applications: Applications = DiscoveryManager.getInstance.getDiscoveryClient.getApplications
     applications.getRegisteredApplications().foreach(x => {
@@ -113,6 +113,7 @@ object FundApp extends HttpServer {
       .filter[TraceIdMDCFilter[Request, Response]]
       .filter[JsonpFilter[Request]]
       .filter[CommonFilters] // global filter
+      .filter[RequestAopFilter[Request]]
       .add(swaggerController)
       .add[HelloFilter, HelloController] // per-controller filter
       .add[WhichUserLoginFilter, UserController]

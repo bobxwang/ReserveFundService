@@ -1,8 +1,12 @@
 package com.bob.reservefund.scala.Filter
 
+import javax.inject.Inject
+
+import com.twitter.finagle.filter.LogFormatter
+import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.{Service, SimpleFilter}
-import com.twitter.finagle.http.{Response, Request}
-import com.twitter.util.Future
+import com.twitter.inject.Logging
+import com.twitter.util.{Stopwatch, Future}
 
 case class WhichUserLogin(id: Long)
 
@@ -34,4 +38,30 @@ class WhichUserLoginFilter extends SimpleFilter[Request, Response] {
     WhichUserLoginContext.setUser(request)
     service(request)
   }
+}
+
+/**
+ * 通过此可以记录请求入参出参
+ * @param logFormatter
+ * @tparam R
+ */
+class RequestAopFilter[R <: Request] @Inject()(
+                                                logFormatter: LogFormatter[R, Response])
+  extends SimpleFilter[R, Response] with Logging {
+
+  override def apply(request: R, service: Service[R, Response]): Future[Response] = {
+    if (!isInfoEnabled) {
+      service(request)
+    }
+    else {
+      val elapsed = Stopwatch.start()
+      service(request) onSuccess { response =>
+        info(response.contentString)
+      } onFailure { e =>
+        // should never get here since this filter is meant to be after the exception barrier
+        info(logFormatter.formatException(request, e, elapsed()))
+      }
+    }
+  }
+
 }
