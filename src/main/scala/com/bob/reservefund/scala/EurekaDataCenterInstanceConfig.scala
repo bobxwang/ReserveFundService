@@ -9,5 +9,14 @@ import com.netflix.appinfo.MyDataCenterInstanceConfig
  */
 class EurekaDataCenterInstanceConfig extends MyDataCenterInstanceConfig {
 
+  /**
+   * 由域名改成IP
+   * @param refresh
+   * @return
+   */
   override def getHostName(refresh: Boolean): String = InetAddress.getLocalHost.getHostAddress
+
+  override def getStatusPageUrlPath: String = "/info"
+
+  override def getHealthCheckUrlPath: String = "/health"
 }
