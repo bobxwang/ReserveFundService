@@ -1,6 +1,6 @@
 # Description
 
-本来想做一个公积金爬取的接口，现在变成纯粹是一个在finatra的使用示例了，结合swagger跟netflix的eureka做服务发现。
+本来想做一个公积金爬取的接口，现在变成纯粹是一个如何使用finatra的例子了，中间结合了swagger跟netflix的eureka,自己注册上去.
 
 # Prerequisite
 
